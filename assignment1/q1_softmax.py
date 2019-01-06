@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*_
 import numpy as np
+
 
 
 def softmax(x):
@@ -29,14 +31,28 @@ def softmax(x):
     orig_shape = x.shape
 
     if len(x.shape) > 1:
+        # 如果是一个矩阵呢
         # Matrix
         ### YOUR CODE HERE
-        raise NotImplementedError
+        print "ff"
+        c = np.max(x, axis = 1)
+        x = x - c.reshape((-1, 1))
+        tot = np.sum(np.exp(x), axis = 1)
+        print "tot.shape", tot.shape
+        tot = tot.reshape((x.shape[0], -1))
+        print "tot.shape", tot.shape
+        
+        x = np.exp(x) / tot
+        #raise NotImplementedError
         ### END YOUR CODE
     else:
         # Vector
         ### YOUR CODE HERE
-        raise NotImplementedError
+        c = np.max(x)
+        x = x - c
+        tot = np.sum(np.exp(x))
+        x = np.exp(x) / tot
+        #raise NotImplementedError
         ### END YOUR CODE
 
     assert x.shape == orig_shape
@@ -53,6 +69,7 @@ def test_softmax_basic():
     print test1
     ans1 = np.array([0.26894142,  0.73105858])
     assert np.allclose(test1, ans1, rtol=1e-05, atol=1e-06)
+    print("Okay 1")
 
     test2 = softmax(np.array([[1001,1002],[3,4]]))
     print test2
@@ -60,6 +77,7 @@ def test_softmax_basic():
         [0.26894142, 0.73105858],
         [0.26894142, 0.73105858]])
     assert np.allclose(test2, ans2, rtol=1e-05, atol=1e-06)
+    print("Okay 2")
 
     test3 = softmax(np.array([[-1001,-1002]]))
     print test3
@@ -78,7 +96,8 @@ def test_softmax():
     """
     print "Running your tests..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+
+    #raise NotImplementedError
     ### END YOUR CODE
 
 

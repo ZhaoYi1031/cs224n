@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*_
 
 import numpy as np
 import random
@@ -12,10 +13,11 @@ def normalizeRows(x):
 
     Implement a function that normalizes each row of a matrix to have
     unit length.
+    实现一个正规化每一行
     """
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    x /= np.linalg.norm(x, axis = 1).reshape(x.shape[0], 1)
     ### END YOUR CODE
 
     return x
@@ -48,9 +50,9 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
     Return:
     cost -- cross entropy cost for the softmax word prediction
     gradPred -- the gradient with respect to the predicted word
-           vector
+           vector 关于预测的词向量的梯度 
     grad -- the gradient with respect to all the other word
-           vectors
+           vectors 关于所有其它词向量的梯度
 
     We will not provide starter code for this function, but feel
     free to reference the code you previously wrote for this
@@ -58,7 +60,26 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
     """
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    # predicted: (3,)
+    # outputVectors: (5, 3)
+    # target: scala
+
+    D = predicted.shape[0]
+    predicted = predicted.reshape(D, 1) #(3,1)
+    print "predicted", predicted
+    out = outputVectors.dot(predicted)
+    correct_class_score = out[target]
+    exp_sum = np.sum(np.exp(out))
+    cost = np.log(exp_sum) - correct_class_score
+
+    margin = np.exp(out) / exp_sum
+    margin[target] += -1
+    gradPred = margin.T.dot(outputVectors)
+    grad = margin.dot(predicted.T)
+
+    print "target", target
+    print "outputVectors", outputVectors
+
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -96,7 +117,24 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     indices.extend(getNegativeSamples(target, dataset, K))
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    #raise NotImplementedError
+    
+    grad = np.zeros(outputVectors.shape)
+    gradPred = np.zeros(predicted.shape)
+    
+    out1 = sigmoid(outputVectors[target].dot(predicted))
+    cost = -np.log(out1)
+    grad[target] += (out1 - 1) * predicted
+    gradPred += (out1 - 1) * outputVectors[target]
+
+    for k in range(K):
+        out2 = sigmoid(- outputVectors[indices[k+1]].dot(predicted))
+        cost += -np.log(out2)
+        grad[indices[k+1]] += - (out2 - 1) * predicted
+        gradPred += -(out2 - 1) * outputVectors[indices[k+1]]
+
+
+
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -131,7 +169,18 @@ def skipgram(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
     gradOut = np.zeros(outputVectors.shape)
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    source = tokens[currentWord]
+    predicted = inputVectors[source]
+
+    for target_word in contextWords:
+        target = tokens[target_word]
+        cost_one, gradPred, grad = word2vecCostAndGradient(predicted, target, outputVectors, dataset)
+        cost += cost_one
+
+        gradIn[source] = gradIn[source] + gradPred
+        gradOut += grad
+
+
     ### END YOUR CODE
 
     return cost, gradIn, gradOut
@@ -155,7 +204,19 @@ def cbow(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
     gradOut = np.zeros(outputVectors.shape)
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    #raise NotImplementedError
+    #!!!!
+    source = [tokens[source_word] for source_word in contextWords]
+    predicted = inputVectors[source]#输入词到词向量映射
+    predicted = np.sum(predicted, axis=0)#sum
+
+    target = tokens[currentWord]
+    cost_one, gradPred, grad = word2vecCostAndGradient(predicted, target, outputVectors, dataset)
+    cost += cost_one
+    # +=自更新报错？？？
+    for i in source:
+        gradIn[i] = gradIn[i] + gradPred #输入上下文词向量更新
+    gradOut += grad
     ### END YOUR CODE
 
     return cost, gradIn, gradOut

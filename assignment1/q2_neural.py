@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import numpy as np
 import random
@@ -11,12 +12,15 @@ from q2_gradcheck import gradcheck_naive
 def forward_backward_prop(X, labels, params, dimensions):
     """
     Forward and backward propagation for a two-layer sigmoidal network
+    对于一个两层的sigmoid网络的前向和反向传播
 
     Compute the forward propagation and for the cross entropy cost,
     the backward propagation for the gradients for all parameters.
+    计算前向传播和交叉熵损失，对于所有参数的反向传播
 
     Notice the gradients computed here are different from the gradients in
     the assignment sheet: they are w.r.t. weights, not inputs.
+    注意到我们这计算的梯度和作业中不一样，它们是
 
     Arguments:
     X -- M x Dx matrix, where each row is a training example x.
@@ -30,7 +34,9 @@ def forward_backward_prop(X, labels, params, dimensions):
     ofs = 0
     Dx, H, Dy = (dimensions[0], dimensions[1], dimensions[2])
 
+    print "X.shape", X.shape
     W1 = np.reshape(params[ofs:ofs+ Dx * H], (Dx, H))
+    print "W1.shape", W1.shape
     ofs += Dx * H
     b1 = np.reshape(params[ofs:ofs + H], (1, H))
     ofs += H
@@ -40,11 +46,22 @@ def forward_backward_prop(X, labels, params, dimensions):
 
     # Note: compute cost based on `sum` not `mean`.
     ### YOUR CODE HERE: forward propagation
-    raise NotImplementedError
+    h = sigmoid(X.dot(W1) + b1) #(M,H)
+    print "#################"
+    print "h.shape", h.shape
+    print "W2.shape", W2.shape
+    out = softmax(h.dot(W2) + b2) #(M,Dy)
+    print "-----------------"
+    cost = np.sum(-labels * np.log(out))
     ### END YOUR CODE
 
     ### YOUR CODE HERE: backward propagation
-    raise NotImplementedError
+    d_t = out - labels #M,Dy
+    gradW2 = h.T.dot(d_t) #H,Dy
+    gradH = d_t.dot(W2.T) #(M,H)
+    gradW1 = X.T.dot(gradH * sigmoid_grad(h)) #X.T.dot(d_t).dot(W2.T) #Dx, H
+    gradb2 = np.sum(d_t, axis = 0)
+    gradb1 = np.sum(gradH * sigmoid_grad(h), axis = 0)
     ### END YOUR CODE
 
     ### Stack gradients (do not modify)
@@ -84,7 +101,6 @@ def your_sanity_checks():
     """
     print "Running your sanity checks..."
     ### YOUR CODE HERE
-    raise NotImplementedError
     ### END YOUR CODE
 
 

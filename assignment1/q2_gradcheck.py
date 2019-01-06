@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*_
 
 import numpy as np
 import random
@@ -7,10 +8,12 @@ import random
 # First implement a gradient checker by filling in the following functions
 def gradcheck_naive(f, x):
     """ Gradient check for a function f.
+    对于一个函数f的梯度检查
 
     Arguments:
     f -- a function that takes a single argument and outputs the
          cost and its gradients
+    f -- 一个函数接受一个单个的参数并且输出损失和梯度
     x -- the point (numpy array) to check the gradient at
     """
 
@@ -20,12 +23,17 @@ def gradcheck_naive(f, x):
     h = 1e-4        # Do not change this!
 
     # Iterate over all indexes ix in x to check the gradient.
+    # 迭代ix中的所有下标去检查梯度
     it = np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
+    # it是所有的下标
     while not it.finished:
         ix = it.multi_index
 
         # Try modifying x[ix] with h defined above to compute numerical
         # gradients (numgrad).
+
+        # 尝试修改x[ix]通过上面定义的h来计算数值梯度
+
 
         # Use the centered difference of the gradient.
         # It has smaller asymptotic error than forward / backward difference
@@ -37,7 +45,15 @@ def gradcheck_naive(f, x):
         # to test cost functions with built in randomness later.
 
         ### YOUR CODE HERE:
-        raise NotImplementedError
+
+        random.setstate(rndstate)
+        x[ix] += h
+        f1, grad1 = f(x)
+        random.setstate(rndstate)
+        x[ix] -= 2*h
+        f2, grad2 = f(x - h)
+        numgrad = (f1 - f2) / (2 * h)
+        x[ix] += h
         ### END YOUR CODE
 
         # Compare gradients
@@ -76,7 +92,6 @@ def your_sanity_checks():
     """
     print "Running your sanity checks..."
     ### YOUR CODE HERE
-    raise NotImplementedError
     ### END YOUR CODE
 
 
