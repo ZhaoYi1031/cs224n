@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*_
 
 import argparse
 import numpy as np
@@ -33,6 +34,9 @@ def getSentenceFeatures(tokens, wordVectors, sentence):
     """
     Obtain the sentence feature for sentiment analysis by averaging its
     word vectors
+
+    获取情感分析中的句子特征，通过平均化它的词向量
+
     """
 
     # Implement computation for the sentence features given a sentence.
@@ -47,10 +51,23 @@ def getSentenceFeatures(tokens, wordVectors, sentence):
     # - sentVector: feature vector for the sentence
 
     sentVector = np.zeros((wordVectors.shape[1],))
-
     ### YOUR CODE HERE
-    raise NotImplementedError
+    #print len(tokens) #19539
+    #print wordVectors.shape #(19539, 30)
+    #print len(sentence), sentence
+
+    ids = [tokens[i] for i in sentence]
+    #print ids
+    sentVector = wordVectors[ids].mean(axis = 0)
+    #print sentVector
+
     ### END YOUR CODE
+
+    """
+    for word in sentence:
+        sentVector += wordVectors[tokens[word]]
+    sentVector /= len(sentence)
+    """
 
     assert sentVector.shape == (wordVectors.shape[1],)
     return sentVector
@@ -59,19 +76,25 @@ def getSentenceFeatures(tokens, wordVectors, sentence):
 def getRegularizationValues():
     """Try different regularizations
 
-    Return a sorted list of values to try.
+    return a sorted list of values to try.
     """
     values = None   # Assign a list of floats in the block below
     ### YOUR CODE HERE
-    raise NotImplementedError
+
+    values = np.logspace(-4, 2, num=20, base=10)
+    #np.linspace(2e-3, 4e-3, num = 100, dtype='float32')
+    print values
+    #[0.4, 0.3, 0.2, 0.1, 0.01, 0.001, 0.0001, 0.00001]
+
     ### END YOUR CODE
     return sorted(values)
 
 
 def chooseBestModel(results):
     """Choose the best model based on dev set performance.
+    基于dev集上的performance选择最好的模型
 
-    Arguments:
+    arguments:
     results -- A list of python dictionaries of the following format:
         {
             "reg": regularization,
@@ -81,17 +104,27 @@ def chooseBestModel(results):
             "test": testAccuracy
         }
 
-    Each dictionary represents the performance of one model.
+    each dictionary represents the performance of one model.
 
-    Returns:
-    Your chosen result dictionary.
+    returns:
+    your chosen result dictionary.
     """
     bestResult = None
 
     ### YOUR CODE HERE
-    raise NotImplementedError
-    ### END YOUR CODE
+    #print "len(reg)", len(reg)
+    #print "len(clf)", len(clf)
+    print "len(result)", len(results)#, results[0]
 
+    bestResult = results[0]
+    for i in range(1, len(results)):
+        if results[i]['dev'] > bestResult['dev']:
+            bestResult = results[i]
+
+    #for reg in regularization:
+    #    for clf in classifier:
+    #        for train in trainAccuracy
+    ### END YOUR CODE
     return bestResult
 
 
@@ -126,7 +159,6 @@ def outputConfusionMatrix(features, labels, clf, filename):
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         plt.text(j, i, cm[i, j],
-                 horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
     plt.tight_layout()
     plt.ylabel('True label')
