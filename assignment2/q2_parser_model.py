@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import cPickle
 import os
 import time
@@ -36,15 +37,21 @@ class ParserModel(Model):
     def add_placeholders(self):
         """Generates placeholder variables to represent the input tensors
 
+        生成placeholder变量来代表输入的tensor
+
         These placeholders are used as inputs by the rest of the model building and will be fed
         data during training.  Note that when "None" is in a placeholder's shape, it's flexible
         (so we can use different batch sizes without rebuilding the model).
 
+Tensorflow的这个None就很神，可以嗲表非常灵活的形状，在后面用这个模型的时候可以任意切换
         Adds following nodes to the computational graph
+增加如下的节点给计算图：
 
         input_placeholder: Input placeholder tensor of  shape (None, n_features), type tf.int32
         labels_placeholder: Labels placeholder tensor of shape (None, n_classes), type tf.float32
         dropout_placeholder: Dropout value placeholder (scalar), type tf.float32
+
+dropout_placeholder: dropout值（向量），类型是tf.float32类型
 
         Add these placeholders to self as the instance variables
             self.input_placeholder
@@ -54,6 +61,9 @@ class ParserModel(Model):
         (Don't change the variable names)
         """
         ### YOUR CODE HERE
+        self.input_placeholder = tf.placeholder(tf.float32, (Config.batch_size, Config.n_features))
+        self.labels_placeholder = tf.placeholder(tf.float32, (Config.batch_size, Config.n_classes))
+        self.dropout_placeholder = tf.placeholder(tf.float32)
         ### END YOUR CODE
 
     def create_feed_dict(self, inputs_batch, labels_batch=None, dropout=0):
@@ -79,17 +89,22 @@ class ParserModel(Model):
             feed_dict: The feed dictionary mapping from placeholders to values.
         """
         ### YOUR CODE HERE
+        feed_dict = {self.input_placeholder: inputs_batch, self.labels_placeholder: labels_batch, self.dropout_placeholder: dropout}
         ### END YOUR CODE
         return feed_dict
 
     def add_embedding(self):
         """Adds an embedding layer that maps from input tokens (integers) to vectors and then
         concatenates those vectors:
+        增加一个embedding层，映射输入的token(整数)到变量，并且concatenate这些vectors
             - Creates a tf.Variable and initializes it with self.pretrained_embeddings.
+            创建一个tf.Variable并且用self.pretrained_embeddings来实例化它
             - Uses the input_placeholder to index into the embeddings tensor, resulting in a
               tensor of shape (None, n_features, embedding_size).
+              使用input_placeholder来映射embeddings tensor，求得一个tensor，形状是(None, n_feature, embeddings_size)
             - Concatenates the embeddings by reshaping the embeddings tensor to shape
               (None, n_features * embedding_size).
+              Concatenate这些embeddings通过reshape成(None, n_features * embedding_size)
 
         Hint: You might find tf.nn.embedding_lookup useful.
         Hint: You can use tf.reshape to concatenate the vectors. See following link to understand
@@ -100,6 +115,10 @@ class ParserModel(Model):
             embeddings: tf.Tensor of shape (None, n_features*embed_size)
         """
         ### YOUR CODE HERE
+        embed = tf.Variable(self.pretrained_embeddings)
+        embeddings = tf.embedding_lookup(embed, self.input_placeholder)
+        embeddings = tf.reshape(embeddings, (-1, self.config.n_features * self.config.embedding_size))
+
         ### END YOUR CODE
         return embeddings
 
@@ -124,8 +143,20 @@ class ParserModel(Model):
             pred: tf.Tensor of shape (batch_size, n_classes)
         """
 
+    # 增加一个一层的神经网络
+    # h=Relu(xW+
         x = self.add_embedding()
         ### YOUR CODE HERE
+        xinit=xavier_weight_init()
+        W=tf.Variable(xinit((self.config.n_features*self.config.embed_size, self.config.hidden_size)))
+        U=tf.Variable(xinit((self.config.hidden_size,self.config.n_classes)))
+        b1=tf.Variable(tf.zeros([self.config.hidden_size,]))
+        b2=tf.Variable(tf.zeros([self.config.n_classes]))
+        h_Relu=tf.add(tf.matmul(x, W), b1) 
+        h=tf.nn.relu(h_Relu)
+        h_drop=tf.nn.dropout(h, self.dropout_placeholder)
+        pred=tf.add(tf.matmul(h_drop,U),b2)
+
         ### END YOUR CODE
         return pred
 
@@ -143,6 +174,8 @@ class ParserModel(Model):
             loss: A 0-d tensor (scalar)
         """
         ### YOUR CODE HERE
+        prob = tf.nn.softmax_cross_entropy_with_logits(logits = pred, labels = self.labels_placeholder)
+        loss = tf.reduce_mean(prob, axis = None) #??? axis=None?
         ### END YOUR CODE
         return loss
 
@@ -167,6 +200,8 @@ class ParserModel(Model):
             train_op: The Op for training.
         """
         ### YOUR CODE HERE
+        optimizer = tf.train.GradientDescentOptimizer(Config.lr).minimize(loss)
+        train_op = optimizer
         ### END YOUR CODE
         return train_op
 

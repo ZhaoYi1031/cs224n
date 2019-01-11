@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*_
+
 class Model(object):
     """Abstracts a Tensorflow graph for a learning task.
 
@@ -7,16 +9,18 @@ class Model(object):
     """
     def add_placeholders(self):
         """Adds placeholder variables to tensorflow computational graph.
+        增加placeholder变量给tf的计算图
 
         Tensorflow uses placeholder variables to represent locations in a
         computational graph where data is inserted.  These placeholders are used as
         inputs by the rest of the model building and will be fed data during
         training.
+        Tensorflow使用placeholder变量来表征一个计算图中数据被插入的位置. 这些占位器被使用作模型的其它输入，并且将会在训练的时候training的fed数据
 
         See for more information:
         https://www.tensorflow.org/versions/r0.7/api_docs/python/io_ops.html#placeholders
         """
-        raise NotImplementedError("Each Model must re-implement this method.")
+        
 
     def create_feed_dict(self, inputs_batch, labels_batch=None):
         """Creates the feed_dict for one step of training.
