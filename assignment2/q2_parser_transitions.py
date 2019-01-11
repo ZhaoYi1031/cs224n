@@ -175,18 +175,21 @@ def minibatch_parse(sentences, model, batch_size):
     while len(unfinished_parses) > 0:
         batch_parses = unfinished_parses if len(unfinished_parses) <= batch_size else unfinished_parses[0: batch_size]
         print "Before model.predict"
+	print batch_parses
         transitions = model.predict(batch_parses)
         print "After model.predict"
-        delete_parse = []
+        delete_parses = []
         i = 0
         print "transitions =", transitions
         while i < len(batch_parses):
             print "i=", i
             batch_parses[i].parse_step(transitions[i])
-            if len(batch_parses[i].buffer) == 0 and len(batch_parses[i].stack) <= 1:
-                #delete_parse.append(i)
-                unfinished_parses.remove(unfinished_parses[i])
+            if len(batch_parses[i].buffer) == 0 and len(batch_parses[i].stack) == 1:
+                delete_parses.append(i)
+                #unfinished_parses.remove(unfinished_parses[i])
             i += 1
+	for _ in delete_parses:
+		del unfinished_parses[_]
     for i in partial_parses:
         dependencies.append(i.dependencies)
     return dependencies
