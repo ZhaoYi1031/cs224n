@@ -22,9 +22,9 @@ class Config(object):
     dropout = 0.5  # (p_drop in the handout)
     embed_size = 50
     hidden_size = 200
-    batch_size = 1024
+    batch_size = 2048#1024
     n_epochs = 10
-    lr = 0.0005
+    lr = 0.001#0.0005
 
 
 class ParserModel(Model):
@@ -50,8 +50,7 @@ Tensorflow的这个None就很神，可以嗲表非常灵活的形状，在后面
         input_placeholder: Input placeholder tensor of  shape (None, n_features), type tf.int32
         labels_placeholder: Labels placeholder tensor of shape (None, n_classes), type tf.float32
         dropout_placeholder: Dropout value placeholder (scalar), type tf.float32
-
-dropout_placeholder: dropout值（向量），类型是tf.float32类型
+	dropout_placeholder: dropout值（向量），类型是tf.float32类型
 
         Add these placeholders to self as the instance variables
             self.input_placeholder
@@ -61,12 +60,12 @@ dropout_placeholder: dropout值（向量），类型是tf.float32类型
         (Don't change the variable names)
         """
         ### YOUR CODE HERE
-        self.input_placeholder = tf.placeholder(tf.float32, (Config.batch_size, Config.n_features))
-        self.labels_placeholder = tf.placeholder(tf.float32, (Config.batch_size, Config.n_classes))
+        self.input_placeholder = tf.placeholder(tf.int32, (None, self.config.n_features))
+        self.labels_placeholder = tf.placeholder(tf.float32, (None, self.config.n_classes))
         self.dropout_placeholder = tf.placeholder(tf.float32)
         ### END YOUR CODE
 
-    def create_feed_dict(self, inputs_batch, labels_batch=None, dropout=0):
+    def create_feed_dict(self, inputs_batch, labels_batch=None, dropout=1):
         """Creates the feed_dict for the dependency parser.
 
         A feed_dict takes the form of:
@@ -88,8 +87,17 @@ dropout_placeholder: dropout值（向量），类型是tf.float32类型
         Returns:
             feed_dict: The feed dictionary mapping from placeholders to values.
         """
+	print "dropout = ", dropout
+	#exit(0)
         ### YOUR CODE HERE
-        feed_dict = {self.input_placeholder: inputs_batch, self.labels_placeholder: labels_batch, self.dropout_placeholder: dropout}
+    	if labels_batch is not None: # labels_batch.all() != None:
+            feed_dict = {self.input_placeholder: inputs_batch, 
+                            self.labels_placeholder: labels_batch, 
+                            self.dropout_placeholder: dropout}
+    	else:
+            feed_dict = {self.input_placeholder: inputs_batch, 
+                            self.dropout_placeholder: dropout}
+    		
         ### END YOUR CODE
         return feed_dict
 
@@ -116,8 +124,8 @@ dropout_placeholder: dropout值（向量），类型是tf.float32类型
         """
         ### YOUR CODE HERE
         embed = tf.Variable(self.pretrained_embeddings)
-        embeddings = tf.embedding_lookup(embed, self.input_placeholder)
-        embeddings = tf.reshape(embeddings, (-1, self.config.n_features * self.config.embedding_size))
+        embeddings = tf.nn.embedding_lookup(embed, self.input_placeholder)
+        embeddings = tf.reshape(embeddings, (-1, self.config.n_features * self.config.embed_size))
 
         ### END YOUR CODE
         return embeddings
@@ -160,6 +168,7 @@ dropout_placeholder: dropout值（向量），类型是tf.float32类型
         ### END YOUR CODE
         return pred
 
+
     def add_loss_op(self, pred):
         """Adds Ops for the loss function to the computational graph.
         In this case we are using cross entropy loss.
@@ -200,7 +209,8 @@ dropout_placeholder: dropout值（向量），类型是tf.float32类型
             train_op: The Op for training.
         """
         ### YOUR CODE HERE
-        optimizer = tf.train.GradientDescentOptimizer(Config.lr).minimize(loss)
+        optimizer = tf.train.AdamOptimizer(self.config.lr).minimize(loss)
+	#tf.train.GradientDescentOptimizer(self.config.lr).minimize(loss)
         train_op = optimizer
         ### END YOUR CODE
         return train_op
@@ -241,7 +251,52 @@ dropout_placeholder: dropout值（向量），类型是tf.float32类型
         self.build()
 
 
-def main(debug=True):
+# def main(debug=False):
+#     print 80 * "="
+#     print "INITIALIZING"
+#     print 80 * "="
+#     config = Config()
+#     parser, embeddings, train_examples, dev_set, test_set = load_and_preprocess_data(debug)
+#     if not os.path.exists('./data/weights/'):
+#         os.makedirs('./data/weights/')
+
+#     with tf.Graph().as_default() as graph:
+#         print "Building model...",
+#         start = time.time()
+#         model = ParserModel(config, embeddings)
+#         parser.model = model
+#         init_op = tf.global_variables_initializer()
+#         saver = None if debug else tf.train.Saver()
+#         print "took {:.2f} seconds\n".format(time.time() - start)
+#     graph.finalize()
+
+#     with tf.Session(graph=graph) as session:
+#         parser.session = session
+#         session.run(init_op)
+
+#         print 80 * "="
+#         print "TRAINING"
+#         print 80 * "="
+#         model.fit(session, saver, parser, train_examples, dev_set)
+
+#         if not debug:
+#             print 80 * "="
+#             print "TESTING"
+#             print 80 * "="
+#             print "Restoring the best model weights found on the dev set"
+#             saver.restore(session, './data/weights/parser.weights')
+#             print "Final evaluation on test set",
+#             UAS, dependencies = parser.parse(test_set)
+#             print "- test UAS: {:.2f}".format(UAS * 100.0)
+#             print "Writing predictions"
+#             with open('q2_test.predicted.pkl', 'w') as f:
+#                 cPickle.dump(dependencies, f, -1)
+#             print "Done!"
+
+
+# if __name__ == '__main__':
+#     main()
+def main(debug=False):
     print 80 * "="
     print "INITIALIZING"
     print 80 * "="
@@ -250,39 +305,41 @@ def main(debug=True):
     if not os.path.exists('./data/weights/'):
         os.makedirs('./data/weights/')
 
-    with tf.Graph().as_default() as graph:
+    with tf.Graph().as_default():
         print "Building model...",
         start = time.time()
         model = ParserModel(config, embeddings)
         parser.model = model
-        init_op = tf.global_variables_initializer()
-        saver = None if debug else tf.train.Saver()
         print "took {:.2f} seconds\n".format(time.time() - start)
-    graph.finalize()
 
-    with tf.Session(graph=graph) as session:
-        parser.session = session
-        session.run(init_op)
+        init = tf.global_variables_initializer()
+        # If you are using an old version of TensorFlow, you may have to use
+        # this initializer instead.
+        # init = tf.initialize_all_variables()
+        saver = None if debug else tf.train.Saver()
 
-        print 80 * "="
-        print "TRAINING"
-        print 80 * "="
-        model.fit(session, saver, parser, train_examples, dev_set)
+        with tf.Session() as session:
+            parser.session = session
+            session.run(init)
 
-        if not debug:
             print 80 * "="
-            print "TESTING"
+            print "TRAINING"
             print 80 * "="
-            print "Restoring the best model weights found on the dev set"
-            saver.restore(session, './data/weights/parser.weights')
-            print "Final evaluation on test set",
-            UAS, dependencies = parser.parse(test_set)
-            print "- test UAS: {:.2f}".format(UAS * 100.0)
-            print "Writing predictions"
-            with open('q2_test.predicted.pkl', 'w') as f:
-                cPickle.dump(dependencies, f, -1)
-            print "Done!"
+            model.fit(session, saver, parser, train_examples, dev_set)
 
+            if not debug:
+                print 80 * "="
+                print "TESTING"
+                print 80 * "="
+                print "Restoring the best model weights found on the dev set"
+                saver.restore(session, './data/weights/parser.weights')
+                print "Final evaluation on test set",
+                UAS, dependencies = parser.parse(test_set)
+                print "- test UAS: {:.2f}".format(UAS * 100.0)
+                print "Writing predictions"
+                with open('q2_test.predicted.pkl', 'w') as f:
+                    cPickle.dump(dependencies, f, -1)
+                print "Done!"
 
 if __name__ == '__main__':
     main()

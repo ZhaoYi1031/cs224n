@@ -28,7 +28,7 @@ class PartialParse(object):
         """
         # The sentence being parsed is kept for bookkeeping purposes. Do not use it in your code.
         self.sentence = sentence
-        print "sentence = ", sentence
+        # print "sentence = ", sentence
 
         ### YOUR CODE HERE
         self.stack = ["ROOT"]
@@ -46,9 +46,9 @@ class PartialParse(object):
                         transition.
         """
         ### YOUR CODE HERE
-        print "parse_step"
-        print "self.sentence = ", self.sentence
-        print transition
+        # print "parse_step"
+        # print "self.sentence = ", self.sentence
+        # print transition
         flag = False
         for c in transition:
             if len(self.buffer) == 0 and len(self.stack) <= 1:
@@ -56,12 +56,12 @@ class PartialParse(object):
             if flag == True:
                 continue
                 flag = False
-            print "c=", c, self.buffer
+            # print "c=", c, self.buffer
             if c == 'S': # SHIFT: removes the first word from the buffer and pushes it onto the stack.
                 val = self.buffer[0]
-                print "self.s =", self.sentence
+                # print "self.s =", self.sentence
                 self.buffer.remove(self.buffer[0])
-                print "self.sentenceeee=", self.sentence
+                # print "self.sentenceeee=", self.sentence
                 self.stack.append(val)
                 flag = False
             elif c == 'L':
@@ -71,7 +71,7 @@ class PartialParse(object):
                 val2 = self.stack[len(self.stack) - 2]
                 self.dependencies.append((val1, val2))
                 self.stack.remove(self.stack[len(self.stack) - 2])
-                print "self.sssssssss=", self.sentence
+                # print "self.sssssssss=", self.sentence
 
                 flag = True
 
@@ -82,12 +82,12 @@ class PartialParse(object):
                 val2 = self.stack[len(self.stack) - 2]
                 self.dependencies.append((val2, val1))
                 self.stack.remove(self.stack[len(self.stack) - 1])
-                print "self.sssss=", self.sentence
+                # print "self.sssss=", self.sentence
 
                 flag = True
 
 
-        print "end parse_step"
+        # print "end parse_step"
 
         ### END YOUR CODE
 
@@ -100,11 +100,11 @@ class PartialParse(object):
             dependencies: The list of dependencies produced when parsing the sentence. Represented
                           as a list of tuples where each tuple is of the form (head, dependent)
         """
-        print "\n\n\n\n%s\n\n\n\n\n\n"%self.sentence
-        print transitions
+        #print "\n\n\n\n%s\n\n\n\n\n\n"%self.sentence
+        # print transitions
         for transition in transitions:
             self.parse_step(transition)
-        print "#######################\n%s##############\n"%self.sentence
+        #print "#######################\n%s##############\n"%self.sentence
         return self.dependencies
 
 
@@ -166,30 +166,32 @@ def minibatch_parse(sentences, model, batch_size):
     partial_parses = []
     dependencies = []
     for s in sentences:
-        print "@"
+        #print "@"
         partial_parses.append(PartialParse(s))
-        print "@@"
+        #print "@@"
     unfinished_parses = partial_parses[:] #切片就是浅拷贝啦（其实不切片应该就是最原始的拷贝(全是引用)了吧
-    print "unfinished_parses", unfinished_parses
-    print "~~~~~~~~~~~"
+    # print "unfinished_parses", unfinished_parses
+    # print "~~~~~~~~~~~"
     while len(unfinished_parses) > 0:
         batch_parses = unfinished_parses if len(unfinished_parses) <= batch_size else unfinished_parses[0: batch_size]
-        print "Before model.predict"
-	print batch_parses
+        # print "Before model.predict"
+        len_batch_parses = len(batch_parses)# print batch_parses
         transitions = model.predict(batch_parses)
-        print "After model.predict"
+        # print "After model.predict"
         delete_parses = []
         i = 0
-        print "transitions =", transitions
+        # print "transitions =", transitions
         while i < len(batch_parses):
-            print "i=", i
+            # print "i=", i
             batch_parses[i].parse_step(transitions[i])
             if len(batch_parses[i].buffer) == 0 and len(batch_parses[i].stack) == 1:
                 delete_parses.append(i)
                 #unfinished_parses.remove(unfinished_parses[i])
             i += 1
-	for _ in delete_parses:
-		del unfinished_parses[_]
+    	for _ in reversed(delete_parses):
+            # print _, "  ", len(unfinished_parses), " ", len_batch_parses, " ", 
+    		del unfinished_parses[_]
+
     for i in partial_parses:
         dependencies.append(i.dependencies)
     return dependencies
@@ -248,14 +250,14 @@ class DummyModel(object):
     测试 minibatch_parse 的虚拟模型
     """
     def predict(self, partial_parses):
-        for pp in partial_parses:
-            print "pp.stack", pp.stack
-            print "pp.buffer", pp.buffer
+        # for pp in partial_parses:
+            # print "pp.stack", pp.stack
+            # print "pp.buffer", pp.buffer
         # 不要深究这个虚拟模型，它只是随便起的给baby test的，实际上stack不会是right 这些东西啥的
         result = [("RA" if pp.stack[1] is "right" else "LA") if len(pp.buffer) == 0 else "S"
                     for pp in partial_parses]
-        print result
-        print "\n\n\n\n\n"
+        # print result
+        # print "\n\n\n\n\n"
         return result#[("RA" if pp.stack[1] is "right" else "LA") if len(pp.buffer) == 0 else "S"
                # for pp in partial_parses]
         # 如果pp.stack[1]是right，那么就是RA 否则就是LA
