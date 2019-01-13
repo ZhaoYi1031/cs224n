@@ -62,10 +62,13 @@ class Config:
 def make_windowed_data(data, start, end, window_size = 1):
     """Uses the input sequences in @data to construct new windowed data points.
 
+ 	使用输入序列在data中来构造新的窗口的数据点
+
     TODO: In the code below, construct a window from each word in the
     input sentence by concatenating the words @window_size to the left
     and @window_size to the right to the word. Finally, add this new
     window data point and its label. to windowed_data.
+	在下面的代码中，在句子的每一个单词中构造一个窗口。最终增加这个新的数据点和label给windowed_data
 
     Args:
         data: is a list of (sentence, labels) tuples. @sentence is a list
@@ -76,10 +79,15 @@ def make_windowed_data(data, start, end, window_size = 1):
             ([[1,9], [2,9], [3,8], [4,8]], [1, 1, 4, 4]). Here "Chris"
             the word has been featurized as "[1, 9]", and "[1, 1, 4, 4]"
             is the list of labels.
+        data: 是一个tuple的list。sentence是一个所有单词的句子，label是标签的list
+		每一个单词本身是有n_features个特征。比如说，"Chris Manning is amazing"和标签"PER PER O O"将会成为([[1,9], [2,9], [3,8], [4,8]], [1,1,4,4])这儿Chris这个单词被特征化为[1,9] labels是[1,1,4,4]
+	
         start: the featurized `start' token to be used for windows at the very
             beginning of the sentence.
+	start: 特征化的start token需要被使用给windows
         end: the featurized `end' token to be used for windows at the very
             end of the sentence.
+		特征化的end的符号给
         window_size: the length of the window to construct.
     Returns:
         a new list of data points, corresponding to each window in the
@@ -92,6 +100,8 @@ def make_windowed_data(data, start, end, window_size = 1):
          ([1, 9, 2, 9, 3, 8], 1),
          ...
          ]
+	一个新的包括数据点的list，和句子中的每一个窗口相关联。每一个数据点包括n_window_feature个特征（和窗口中的单词相关联）给他的NER标签相关联
+	如果start=[5,8] end=[6,8] 上面的例子将会返回
     """
 
     windowed_data = []
