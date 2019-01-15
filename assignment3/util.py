@@ -406,10 +406,12 @@ def get_minibatches(data, minibatch_size, shuffle=True):
 
 
 def minibatch(data, minibatch_idx):
+    # 返回data上的一个minibatch数据
     return data[minibatch_idx] if type(data) is np.ndarray else [data[i] for i in minibatch_idx]
+    # 如果data的数据是np.ndarray 那么返回data[minibatch_idx]上的数据，否则
 
 def minibatches(data, batch_size, shuffle=True):
-    batches = [np.array(col) for col in zip(*data)]
+    batches = [np.array(col) for col in zip(*data)] # batches上的数据是
     return get_minibatches(batches, batch_size, shuffle)
 
 def print_sentence(output, sentence, labels, predictions):

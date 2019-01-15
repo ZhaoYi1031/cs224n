@@ -108,8 +108,19 @@ class NERModel(Model):
 			# Read the doc for utils.get_minibatches to find out how to use it.
                         # Note that get_minibatches could either return a list, or a list of list
                         # [features, labels]. This makes expanding tuples into arguments (* operator) handy
-
+            # 总的idea是在minibatch中从train_examples中进行循环，并且执行train_on_batch 在这个循环里
             ### YOUR CODE HERE (2-3 lines)
+
+            # x = minibatches(train_examples, self.config.batch_size)
+            for i, batch in enumerate(minibatches(train_examples, self.config.batch_size)):
+                print "\n****************************\n"
+                print "batch", batch
+
+                loss = self.train_on_batch(sess, *batch)
+                prog.update(i + 1, [("train loss", loss)])
+                if self.report:
+                    self.report.log_train_loss(loss)
+
 
             ### END YOUR CODE
 

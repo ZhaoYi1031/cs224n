@@ -37,7 +37,7 @@ class Config:
     n_word_features = 2 # Number of features for every word in the input.
     window_size = 1 # The size of the window to use.
     ### YOUR CODE HERE
-    n_window_features = 0 # The total number of features used for each window.
+    n_window_features = (2 * window_size + 1) * n_word_features # The total number of features used for each window.
     ### END YOUR CODE
     n_classes = 5
     dropout = 0.5
@@ -81,7 +81,7 @@ def make_windowed_data(data, start, end, window_size = 1):
             is the list of labels.
         data: 是一个tuple的list。sentence是一个所有单词的句子，label是标签的list
 		每一个单词本身是有n_features个特征。比如说，"Chris Manning is amazing"和标签"PER PER O O"将会成为([[1,9], [2,9], [3,8], [4,8]], [1,1,4,4])这儿Chris这个单词被特征化为[1,9] labels是[1,1,4,4]
-	
+
         start: the featurized `start' token to be used for windows at the very
             beginning of the sentence.
 	start: 特征化的start token需要被使用给windows
@@ -104,10 +104,41 @@ def make_windowed_data(data, start, end, window_size = 1):
 	如果start=[5,8] end=[6,8] 上面的例子将会返回
     """
 
+    # w_data == [
+    #     ([5, 0] + [1, 1] + [2, 0], 1,),
+    #     ([1, 1] + [2, 0] + [3, 3], 2,),
+    #     ([2, 0] + [3, 3] + [6, 0], 3,),
+    # ]
+    # print "start = ", start
+
     windowed_data = []
+    # print "data =", data
     for sentence, labels in data:
 		### YOUR CODE HERE (5-20 lines)
+        # print "sentence=", sentence
+        # print "labels=", labels
 
+        for i in xrange(len(sentence)):
+            # print "\n\ni =", i
+            pair_input = []
+            for ind in range(-window_size, window_size+1):
+                # print "ind=", ind
+                index_real = i + ind
+                if index_real < 0:
+                    word_this = start
+                elif index_real >= len(sentence):
+                    word_this = end
+                else:
+                    word_this = sentence[index_real]
+
+                # print "index_real =", index_real, word_this
+                # if pair_input == []:
+                #     pair_input = word_this
+                # else:
+                #     pair_input = [pair_input[ii] + word_this[ii] for ii in range(0, len(pair_input))] #ii 不能写i, 若写i外层的循环变量会改
+                pair_input = pair_input + word_this
+            windowed_data.append((pair_input, labels[i]))
+            # print "windowed_data", windowed_data
 		### END YOUR CODE
     return windowed_data
 
@@ -117,20 +148,29 @@ class WindowModel(NERModel):
     single hidden layer.
     This network will predict what label (e.g. PER) should be given to a
     given token (e.g. Manning) by  using a featurized window around the token.
+    实现一个前向传播的神经网络用一个embedding层
+    这个网络将会预测什么标签（比如PER）将要给给一个给定的token(例如Manning)
+    通过使用一个特征化的窗口在token附近
     """
 
     def add_placeholders(self):
         """Generates placeholder variables to represent the input tensors
+        产生placeholder变量来表征输入张量
 
         These placeholders are used as inputs by the rest of the model building and will be fed
         data during training.  Note that when "None" is in a placeholder's shape, it's flexible
         (so we can use different batch sizes without rebuilding the model).
 
+        这些占位符被用作输入，将会被喂入数据
+
         Adds following nodes to the computational graph
+
+        增加接下来的节点给计算图
 
         input_placeholder: Input placeholder tensor of  shape (None, n_window_features), type tf.int32
         labels_placeholder: Labels placeholder tensor of shape (None,), type tf.int32
         dropout_placeholder: Dropout value placeholder (scalar), type tf.float32
+
 
         Add these placeholders to self as the instance variables
             self.input_placeholder
@@ -140,7 +180,9 @@ class WindowModel(NERModel):
         (Don't change the variable names)
         """
         ### YOUR CODE HERE (~3-5 lines)
-
+        self.input_placeholder = tf.placeholder(tf.int32, (None, self.config.n_window_features))
+        self.labels_placeholder = tf.placeholder(tf.int32, (None, ))
+        self.dropout_placeholder = tf.placeholder(tf.float32)
         ### END YOUR CODE
 
     def create_feed_dict(self, inputs_batch, labels_batch=None, dropout=1):
@@ -163,7 +205,13 @@ class WindowModel(NERModel):
             feed_dict: The feed dictionary mapping from placeholders to values.
         """
         ### YOUR CODE HERE (~5-10 lines)
-         
+        if labels_batch is not None:
+            feed_dict = {self.input_placeholder: inputs_batch,
+                         self.labels_placeholder: labels_batch,
+                         self.dropout_placeholder: dropout}
+        else:
+            feed_dict = {self.input_placeholder: inputs_batch,
+                         self.dropout_placeholder: dropout}
         ### END YOUR CODE
         return feed_dict
 
@@ -184,9 +232,10 @@ class WindowModel(NERModel):
             embeddings: tf.Tensor of shape (None, n_window_features*embed_size)
         """
         ### YOUR CODE HERE (!3-5 lines)
-                                                             
-                                  
-                                                                                                                 
+        # print "self.pretrained_embedding", self.pretrained_embeddings
+        embed = tf.nn.embedding_lookup(tf.Variable(self.pretrained_embeddings), self.input_placeholder)
+        # print "embed", embed
+        embeddings = tf.reshape(embed, [-1, self.config.n_window_features * self.config.embed_size])
         ### END YOUR CODE
         return embeddings
 
@@ -217,6 +266,19 @@ class WindowModel(NERModel):
         x = self.add_embedding()
         dropout_rate = self.dropout_placeholder
         ### YOUR CODE HERE (~10-20 lines)
+        # W = tf.contrib.layers.xavier_initializer() # tf.get_variable("W")
+        # b1 = tf.get_variable("b1")
+        # b2 = tf.get_variable("b2")
+        # U = tf.get_variable("U")
+        xavier_init = tf.contrib.layers.xavier_initializer()
+        W = tf.get_variable(name='W', shape=[self.config.n_window_features * self.config.embed_size, self.config.hidden_size], dtype=tf.float32, initializer=xavier_init)
+        b1 = tf.Variable(tf.zeros(self.config.hidden_size), name='b1')
+        b2 = tf.Variable(tf.zeros(self.config.n_classes), name='b2')
+        U = tf.get_variable(name='U', shape=[self.config.hidden_size, self.config.n_classes], dtype=tf.float32, initializer=xavier_init)
+        h = tf.nn.relu(tf.matmul(x, W) + b1)
+        h_drop = tf.nn.dropout(h, dropout_rate)
+        print "-------------"
+        pred = tf.matmul(h_drop, U) + b2
 
         ### END YOUR CODE
         return pred
@@ -230,12 +292,14 @@ class WindowModel(NERModel):
         implementation. You might find tf.reduce_mean useful.
         Args:
             pred: A tensor of shape (batch_size, n_classes) containing the output of the neural
-                  network before the softmax layer.
+                  network before the softmax layer. #
         Returns:
             loss: A 0-d tensor (scalar)
         """
         ### YOUR CODE HERE (~2-5 lines)
-                                   
+
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels = self.labels_placeholder, logits = pred)
+        loss = tf.reduce_mean(loss)
         ### END YOUR CODE
         return loss
 
@@ -259,9 +323,11 @@ class WindowModel(NERModel):
             train_op: The Op for training.
         """
         ### YOUR CODE HERE (~1-2 lines)
+        train_op = tf.train.AdamOptimizer(self.config.lr).minimize(loss)
 
         ### END YOUR CODE
         return train_op
+
 
     def preprocess_sequence_data(self, examples):
         return make_windowed_data(examples, start=self.helper.START, end=self.helper.END, window_size=self.config.window_size)
@@ -315,7 +381,7 @@ def test_make_windowed_data():
     data = zip(sentences, sentence_labels)
     w_data = make_windowed_data(data, start=[5,0], end=[6,0], window_size=1)
 
-    assert len(w_data) == sum(len(sentence) for sentence in sentences)
+    assert len(w_data) == sum(len(sentence) for sentence in sentences) # = 3(就一个句子，单词是[1,1], [2,0], [3,3])
 
     assert w_data == [
         ([5,0] + [1,1] + [2,0], 1,),
