@@ -45,6 +45,7 @@ class RNNCell(tf.nn.rnn_cell.RNNCell):
             - Define W_x, W_h, b to be variables of the apporiate shape
               using the `tf.get_variable' functions. Make sure you use
               the names "W_x", "W_h" and "b"!
+
             - Compute @new_state (h_t) defined above
         Tips:
             - Remember to initialize your matrices using the xavier
@@ -60,9 +61,26 @@ class RNNCell(tf.nn.rnn_cell.RNNCell):
 
         # It's always a good idea to scope variables in functions lest they
         # be defined elsewhere!
+
+        # print "\n\n****************************\n\n"
         with tf.variable_scope(scope):
             ### YOUR CODE HERE (~6-10 lines)
-            pass
+            # 下面的这段就是RNN的核心代码了，主要就是根据上一个状态和输入来计算下一个状态的值
+            initializer_xavier = tf.contrib.layers.xavier_initializer()
+            W_x = tf.get_variable("W_x", dtype = tf.float32, shape=[self.input_size, self._state_size], initializer=initializer_xavier)
+            W_h = tf.get_variable("W_h", dtype = tf.float32, shape=[self._state_size, self._state_size], initializer=initializer_xavier)
+            b = tf.get_variable("b", dtype = tf.float32, shape=[self._state_size], initializer = initializer_xavier)
+            # print type(W_x)
+            h_t = tf.nn.sigmoid(tf.matmul(inputs, W_x) + tf.matmul(state, W_h) + b)
+            new_state = h_t
+            # W_x = tf.get_variable('W_x', shape=(self.input_size, self._state_size), dtype=tf.float32,
+            #                       initializer=tf.contrib.layers.xavier_initializer())
+            # W_h = tf.get_variable('W_h', shape=(self._state_size, self._state_size), dtype=tf.float32,
+            #                       initializer=tf.contrib.layers.xavier_initializer())
+            # b = tf.get_variable('b', shape=(self._state_size), dtype=tf.float32,
+            #                     initializer=tf.contrib.layers.xavier_initializer())
+
+            # new_state = tf.nn.sigmoid(tf.matmul(state, W_h) + tf.matmul(inputs, W_x) + b)
             ### END YOUR CODE ###
         # For an RNN , the output and state are the same (N.B. this
         # isn't true for an LSTM, though we aren't using one of those in
@@ -83,11 +101,14 @@ def test_rnn_cell():
 
             tf.get_variable_scope().reuse_variables()
             cell = RNNCell(3, 2)
+            # print "￥￥￥￥￥￥￥￥￥￥￥￥￥￥"
             y_var, ht_var = cell(x_placeholder, h_placeholder, scope="rnn")
+            # print "$$$$$$$$$$$$$$$#$$$$$$$$"
 
             init = tf.global_variables_initializer()
             with tf.Session() as session:
                 session.run(init)
+
                 x = np.array([
                     [0.4, 0.5, 0.6],
                     [0.3, -0.2, -0.1]], dtype=np.float32)
@@ -100,6 +121,7 @@ def test_rnn_cell():
                 ht = y
 
                 y_, ht_ = session.run([y_var, ht_var], feed_dict={x_placeholder: x, h_placeholder: h})
+
                 print("y_ = " + str(y_))
                 print("ht_ = " + str(ht_))
 
