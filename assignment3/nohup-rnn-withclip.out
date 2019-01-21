@@ -1,0 +1,31 @@
+q3_gru.py:29: UserWarning: 
+This call to matplotlib.use() has no effect because the backend has already
+been chosen; matplotlib.use() must be called *before* pylab, matplotlib.pyplot,
+or matplotlib.backends is imported for the first time.
+
+The backend was *originally* set to 'agg' by the following code:
+  File "q3_gru.py", line 21, in <module>
+    import matplotlib.pyplot as plt
+  File "/home/server2/anaconda3/envs/python27/lib/python2.7/site-packages/matplotlib/pyplot.py", line 71, in <module>
+    from matplotlib.backends import pylab_setup
+  File "/home/server2/anaconda3/envs/python27/lib/python2.7/site-packages/matplotlib/backends/__init__.py", line 16, in <module>
+    line for line in traceback.format_stack()
+
+
+  matplotlib.use('TkAgg')
+INFO:Building model...
+INFO:took 0.44 seconds
+2019-01-17 11:36:22.092773: I tensorflow/core/platform/cpu_feature_guard.cc:137] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2019-01-17 11:36:22.243450: E tensorflow/core/common_runtime/direct_session.cc:170] Internal: failed initializing StreamExecutor for CUDA device ordinal 0: Internal: failed call to cuDevicePrimaryCtxRetain: CUDA_ERROR_OUT_OF_MEMORY; total memory reported: 12780699648
+Traceback (most recent call last):
+  File "q3_gru.py", line 368, in <module>
+    ARGS.func(ARGS)
+  File "q3_gru.py", line 337, in do_sequence_prediction
+    with tf.Session() as session:
+  File "/home/server2/anaconda3/envs/python27/lib/python2.7/site-packages/tensorflow/python/client/session.py", line 1482, in __init__
+    super(Session, self).__init__(target, graph, config=config)
+  File "/home/server2/anaconda3/envs/python27/lib/python2.7/site-packages/tensorflow/python/client/session.py", line 622, in __init__
+    self._session = tf_session.TF_NewDeprecatedSession(opts, status)
+  File "/home/server2/anaconda3/envs/python27/lib/python2.7/site-packages/tensorflow/python/framework/errors_impl.py", line 473, in __exit__
+    c_api.TF_GetCode(self.status.status))
+tensorflow.python.framework.errors_impl.InternalError: Failed to create session.

@@ -23,8 +23,8 @@ class GRUCell(tf.nn.rnn_cell.RNNCell):
     nicely with TensorFlow.
     """
     def __init__(self, input_size, state_size):
-        self.input_size = input_size #3
-        self._state_size = state_size #2
+        self.input_size = input_size
+        self._state_size = state_size
 
     @property
     def state_size(self):
@@ -65,27 +65,7 @@ class GRUCell(tf.nn.rnn_cell.RNNCell):
         # be defined elsewhere!
         with tf.variable_scope(scope):
             ### YOUR CODE HERE (~20-30 lines)
-            initFunc = tf.contrib.layers.xavier_initializer(uniform=False)
-            W_r = tf.get_variable('W_r', [self.state_size, self.state_size], initializer=initFunc, dtype=tf.float32)
-            U_r = tf.get_variable('U_r', [self.input_size, self.state_size], initializer=initFunc, dtype=tf.float32)
-            b_r = tf.get_variable('b_r', [self.state_size, ], initializer=tf.constant_initializer(0), dtype=tf.float32)
-            W_z = tf.get_variable('W_z', [self.state_size, self.state_size], initializer=initFunc, dtype=tf.float32)
-            U_z = tf.get_variable('U_z', [self.input_size, self.state_size], initializer=initFunc, dtype=tf.float32)
-            b_z = tf.get_variable('b_z', [self.state_size, ], initializer=tf.constant_initializer(0),
-                                  dtype=tf.float32)  ## Recommend on Piazza
-            W_o = tf.get_variable('W_o', [self.state_size, self.state_size], initializer=initFunc, dtype=tf.float32)
-            U_o = tf.get_variable('U_o', [self.input_size, self.state_size], initializer=initFunc, dtype=tf.float32)
-            b_o = tf.get_variable('b_o', [self.state_size, ], initializer=tf.constant_initializer(0), dtype=tf.float32)
-
-
-
-
-            z_t = tf.nn.sigmoid(tf.matmul(inputs, U_z) + tf.matmul(state, W_z) + b_z)
-            r_t = tf.nn.sigmoid(tf.matmul(inputs, U_r) + tf.matmul(state, W_r) + b_z)
-            o_t = tf.nn.tanh(tf.matmul(inputs, U_o) + tf.matmul(r_t*state, W_o) + b_o)
-
-            h_t = z_t * state + (1-z_t) * o_t
-            new_state = h_t
+            pass
             ### END YOUR CODE ###
         # For a GRU, the output and state are the same (N.B. this isn't true
         # for an LSTM, though we aren't using one of those in our
@@ -100,14 +80,14 @@ def test_gru_cell():
             h_placeholder = tf.placeholder(tf.float32, shape=(None,2))
 
             with tf.variable_scope("gru"):
-                tf.get_variable("U_r", initializer=np.array(np.eye(3,2), dtype=np.float32))
-                tf.get_variable("W_r", initializer=np.array(np.eye(2,2), dtype=np.float32))
+                tf.get_variable("W_r", initializer=np.array(np.eye(3,2), dtype=np.float32))
+                tf.get_variable("U_r", initializer=np.array(np.eye(2,2), dtype=np.float32))
                 tf.get_variable("b_r",  initializer=np.array(np.ones(2), dtype=np.float32))
-                tf.get_variable("W_z", initializer=np.array(np.eye(2,2), dtype=np.float32))
-                tf.get_variable("U_z", initializer=np.array(np.eye(3,2), dtype=np.float32))
+                tf.get_variable("W_z", initializer=np.array(np.eye(3,2), dtype=np.float32))
+                tf.get_variable("U_z", initializer=np.array(np.eye(2,2), dtype=np.float32))
                 tf.get_variable("b_z",  initializer=np.array(np.ones(2), dtype=np.float32))
-                tf.get_variable("W_o", initializer=np.array(np.eye(2,2), dtype=np.float32))
-                tf.get_variable("U_o", initializer=np.array(np.eye(3,2), dtype=np.float32))
+                tf.get_variable("W_o", initializer=np.array(np.eye(3,2), dtype=np.float32))
+                tf.get_variable("U_o", initializer=np.array(np.eye(2,2), dtype=np.float32))
                 tf.get_variable("b_o",  initializer=np.array(np.ones(2), dtype=np.float32))
 
             tf.get_variable_scope().reuse_variables()

@@ -17,7 +17,6 @@ import tensorflow as tf
 import numpy as np
 
 import matplotlib
-matplotlib.use('Agg')   
 import matplotlib.pyplot as plt
 
 from util import Progbar, minibatches
@@ -88,7 +87,6 @@ class SequencePredictor(Model):
 
         x = self.inputs_placeholder
         ### YOUR CODE HERE (~2-3 lines)
-        preds = tf.nn.sigmoid(tf.nn.dynamic_rnn(cell, x, dtype = tf.float32)[1])
         ### END YOUR CODE
 
         return preds #state # preds
@@ -110,7 +108,7 @@ class SequencePredictor(Model):
         y = self.labels_placeholder
 
         ### YOUR CODE HERE (~1-2 lines)
-        loss = tf.reduce_mean(tf.nn.l2_loss(preds))
+
         ### END YOUR CODE
 
         return loss
@@ -148,17 +146,7 @@ class SequencePredictor(Model):
         # - Remember to clip gradients only if self.config.clip_gradients
         # is True.
         # - Remember to set self.grad_norm
-        # 这一段就是梯度裁减了。
-        # 一个主要的函数是tf.global_norm，这个是计算这个梯度矩阵的全局范数（但这个范数的值的定义我没怎么太看明白）
-        #
-        grads_and_vars = optimizer.compute_gradients(loss)
-        variables = [output[1] for output in grads_and_vars]
-        gradients = [output[0] for output in grads_and_vars]
-        if self.config.clip_gradients == True:
-            tmp_gradients = tf.clip_by_global_norm(gradients, clip_norm = self.config.max_grad_norm)
-        grads_and_vars = [(gradients[i], variables[i]) for i in range(len(gradients))]
-        self.grad_norm = tf.global_norm(gradients)
-        train_op = optimizer.apply_gradients(grads_and_vars)
+
         ### END YOUR CODE
 
         assert self.grad_norm is not None, "grad_norm was not set properly!"
